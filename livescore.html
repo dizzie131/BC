@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basketball Scores</title>
+    <meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=1.0, user-scalable=no">
+    <title>Basketball Fixtures - Team 2</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -14,23 +18,38 @@
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
+            word-wrap: break-word; /* Prevent overflow of long text */
+            font-size: 14px; /* Set a base font size */
         }
         th {
             background-color: #f2f2f2;
         }
         img {
-            width: 45px;
-            height: 45px;
+            width: 35px; /* Reduced logo size */
+            height: 35px; /* Reduced logo size */
             vertical-align: middle;
             margin-right: 8px;
         }
         .highlight {
             background-color: #FEBE10;
         }
+        @media (max-width: 600px) {
+            th, td {
+                font-size: 12px; /* Smaller font size for mobile */
+            }
+            img {
+                width: 30px; /* Further reduced logo size for mobile */
+                height: 30px; /* Further reduced logo size for mobile */
+            }
+            .hide-mobile {
+                display: none; /* Hide the status column on mobile */
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Basketball Scores</h1>
+    <h1>Basketball Fixtures - Team 2</h1>
+    <a href="t1.html">Click here to see Team 1</a>
 
     <div id="scores-container">
         <!-- Scores tables will be populated here -->
@@ -38,7 +57,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            fetch('https://api-basketball.squadi.com/livescores/round/matches?divisionId=9665&ignoreStatuses=[1]')
+            fetch('https://api-basketball.squadi.com/livescores/round/matches?divisionId=9671&ignoreStatuses=[1]')
                 .then(response => response.json())
                 .then(data => {
                     data.rounds.forEach(round => {
@@ -46,11 +65,11 @@
                             <thead>
                                 <tr>
                                     <th>Date & Time</th>
-                                    <th>Team 1</th>
+                                    <th>Home</th> <!-- Changed from Team 1 to Home -->
                                     <th>Score</th>
                                     <th>Score</th>
-                                    <th>Team 2</th>
-                                    <th>Status</th>
+                                    <th>Away</th> <!-- Changed from Team 2 to Away -->
+                                    <th class="hide-mobile">Status</th> <!-- Hide this column on mobile -->
                                     <th>Venue</th>
                                 </tr>
                             </thead>
@@ -93,10 +112,10 @@
                             const row = `<tr>
                                 <td>${startTime}</td>
                                 <td class="${team1Class}"><img src="${team1Logo}" alt="${team1Name} logo">${team1Display}</td>
-                                <td class="${team1Class}">${score1Display}</td>
-                                <td>${score2Display}</td>
+                                <td>${score1Display}</td> <!-- No highlight applied to score -->
+                                <td>${score2Display}</td> <!-- No highlight applied to score -->
                                 <td class="${team2Class}"><img src="${team2Logo}" alt="${team2Name} logo">${team2Display}</td>
-                                <td>${matchStatus}</td>
+                                <td class="hide-mobile">${matchStatus}</td> <!-- Hide this cell on mobile -->
                                 <td><a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank">${venueName} - Court ${courtNumber}</a></td>
                             </tr>`;
                             
