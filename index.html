@@ -41,6 +41,9 @@
                 width: 30px; /* Further reduced logo size for mobile */
                 height: 30px; /* Further reduced logo size for mobile */
             }
+            .hide-mobile {
+                display: none; /* Hide the status column on mobile */
+            }
         }
     </style>
 </head>
@@ -66,7 +69,7 @@
                                     <th>Score</th>
                                     <th>Score</th>
                                     <th>Team 2</th>
-                                    <th>Status</th>
+                                    <th class="hide-mobile">Status</th> <!-- Hide this column on mobile -->
                                     <th>Venue</th>
                                 </tr>
                             </thead>
@@ -112,7 +115,7 @@
                                 <td class="${team1Class}">${score1Display}</td>
                                 <td>${score2Display}</td>
                                 <td class="${team2Class}"><img src="${team2Logo}" alt="${team2Name} logo">${team2Display}</td>
-                                <td>${matchStatus}</td>
+                                <td class="hide-mobile">${matchStatus}</td> <!-- Hide this cell on mobile -->
                                 <td><a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank">${venueName} - Court ${courtNumber}</a></td>
                             </tr>`;
                             
