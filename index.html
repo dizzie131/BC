@@ -112,8 +112,8 @@
                             const row = `<tr>
                                 <td>${startTime}</td>
                                 <td class="${team1Class}"><img src="${team1Logo}" alt="${team1Name} logo">${team1Display}</td>
-                                <td class="${team1Class}">${score1Display}</td>
-                                <td>${score2Display}</td>
+                                <td>${score1Display}</td> <!-- No highlight applied to score -->
+                                <td>${score2Display}</td> <!-- No highlight applied to score -->
                                 <td class="${team2Class}"><img src="${team2Logo}" alt="${team2Name} logo">${team2Display}</td>
                                 <td class="hide-mobile">${matchStatus}</td> <!-- Hide this cell on mobile -->
                                 <td><a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank">${venueName} - Court ${courtNumber}</a></td>
