@@ -5,15 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Basketball Scores</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
+            overflow-x: auto; /* Allow horizontal scrolling on small screens */
         }
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
+            word-wrap: break-word; /* Prevent overflow of long text */
         }
         th {
             background-color: #f2f2f2;
@@ -27,11 +33,20 @@
         .highlight {
             background-color: #FEBE10;
         }
+        @media (max-width: 600px) {
+            table {
+                display: block;
+                overflow-x: auto; /* Enable horizontal scrolling */
+            }
+            th, td {
+                white-space: nowrap; /* Prevent table cell content from wrapping */
+            }
+        }
     </style>
 </head>
 <body>
     <h1>Basketball Fixtures</h1>
-<a href="t1.html">Click here to see Team 1</a>
+    <a href="t1.html">Click here to see Team 1</a>
 
     <div id="scores-container">
         <!-- Scores tables will be populated here -->
