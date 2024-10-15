@@ -13,20 +13,20 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
-            overflow-x: auto; /* Allow horizontal scrolling on small screens */
         }
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
             word-wrap: break-word; /* Prevent overflow of long text */
+            font-size: 14px; /* Set a base font size */
         }
         th {
             background-color: #f2f2f2;
         }
         img {
-            width: 45px;
-            height: 45px;
+            width: 35px; /* Reduced logo size */
+            height: 35px; /* Reduced logo size */
             vertical-align: middle;
             margin-right: 8px;
         }
@@ -34,12 +34,12 @@
             background-color: #FEBE10;
         }
         @media (max-width: 600px) {
-            table {
-                display: block;
-                overflow-x: auto; /* Enable horizontal scrolling */
-            }
             th, td {
-                white-space: nowrap; /* Prevent table cell content from wrapping */
+                font-size: 12px; /* Smaller font size for mobile */
+            }
+            img {
+                width: 30px; /* Further reduced logo size for mobile */
+                height: 30px; /* Further reduced logo size for mobile */
             }
         }
     </style>
