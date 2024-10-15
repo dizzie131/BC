@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basketball Scores</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        img {
+            width: 45px;
+            height: 45px;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        .highlight {
+            background-color: #FEBE10;
+        }
+    </style>
+</head>
+<body>
+    <h1>Basketball Scores</h1>
+
+    <div id="scores-container">
+        <!-- Scores tables will be populated here -->
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('https://api-basketball.squadi.com/livescores/round/matches?divisionId=9665&ignoreStatuses=[1]')
+                .then(response => response.json())
+                .then(data => {
+                    data.rounds.forEach(round => {
+                        let roundTable = `<h2>${round.name}</h2><table>
+                            <thead>
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>Team 1</th>
+                                    <th>Score</th>
+                                    <th>Score</th>
+                                    <th>Team 2</th>
+                                    <th>Status</th>
+                                    <th>Venue</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                        
+                        round.matches.forEach(match => {
+                            const team1Name = match.team1.name;
+                            const team1Logo = match.team1.logoUrl;
+                            const team2Name = match.team2.name;
+                            const team2Logo = match.team2.logoUrl;
+                            const team1Score = match.team1Score;
+                            const team2Score = match.team2Score;
+                            const startTime = new Date(match.startTime).toLocaleString('en-AU', {
+                                timeZone: 'Australia/Adelaide',
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                            });
+                            const matchStatus = match.matchStatus || 'UPCOMING';
+                            const venueName = match.venueCourt.venue.name;
+                            const courtNumber = match.venueCourt.courtNumber;
+                            const lat = match.venueCourt.lat;
+                            const lng = match.venueCourt.lng;
+
+                            const isTeam1Winning = team1Score > team2Score;
+                            const isTeam2Winning = team2Score > team1Score;
+                            const bothScoresZero = team1Score === 0 && team2Score === 0;
+
+                            const team1Display = bothScoresZero ? team1Name : (isTeam1Winning ? `<strong>${team1Name}</strong>` : team1Name);
+                            const team2Display = bothScoresZero ? team2Name : (isTeam2Winning ? `<strong>${team2Name}</strong>` : team2Name);
+                            const score1Display = bothScoresZero ? '' : (isTeam1Winning ? `<strong>${team1Score}</strong>` : team1Score);
+                            const score2Display = bothScoresZero ? '' : (isTeam2Winning ? `<strong>${team2Score}</strong>` : team2Score);
+
+                            const team1Class = team1Name.includes("Southern Tigers") ? 'highlight' : '';
+                            const team2Class = team2Name.includes("Southern Tigers") ? 'highlight' : '';
+
+                            const row = `<tr>
+                                <td>${startTime}</td>
+                                <td class="${team1Class}"><img src="${team1Logo}" alt="${team1Name} logo">${team1Display}</td>
+                                <td class="${team1Class}">${score1Display}</td>
+                                <td>${score2Display}</td>
+                                <td class="${team2Class}"><img src="${team2Logo}" alt="${team2Name} logo">${team2Display}</td>
+                                <td>${matchStatus}</td>
+                                <td><a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank">${venueName} - Court ${courtNumber}</a></td>
+                            </tr>`;
+                            
+                            roundTable += row;
+                        });
+
+                        roundTable += `</tbody></table>`;
+                        document.querySelector('#scores-container').innerHTML += roundTable;
+                    });
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        });
+    </script>
+</body>
+</html>
