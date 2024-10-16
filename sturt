@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=1.0, user-scalable=no">
+    <title>Basketball Fixtures - Team 2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            word-wrap: break-word; /* Prevent overflow of long text */
+            font-size: 14px; /* Set a base font size */
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        img {
+            width: 35px; /* Reduced logo size */
+            height: 35px; /* Reduced logo size */
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        .highlight {
+            background-color: #FEBE10;
+        }
+        @media (max-width: 600px) {
+            th, td {
+                font-size: 12px; /* Smaller font size for mobile */
+            }
+            img {
+                width: 30px; /* Further reduced logo size for mobile */
+                height: 30px; /* Further reduced logo size for mobile */
+            }
+            .hide-mobile {
+                display: none; /* Hide the status column on mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Basketball Fixtures - Team 2</h1>
+    <a href="t1.html">Click here to see Team 1</a>
+
+    <div id="scores-container">
+        <!-- Scores tables will be populated here -->
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('https://api-basketball.squadi.com/livescores/round/matches?divisionId=10599&ignoreStatuses=[1]')
+                .then(response => response.json())
+                .then(data => {
+                    data.rounds.forEach(round => {
+                        let roundTable = `<h2>${round.name}</h2><table>
+                            <thead>
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>Home</th> <!-- Changed from Team 1 to Home -->
+                                    <th>Score</th>
+                                    <th>Score</th>
+                                    <th>Away</th> <!-- Changed from Team 2 to Away -->
+                                    <th class="hide-mobile">Status</th> <!-- Hide this column on mobile -->
+                                    <th>Venue</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                        
+                        round.matches.forEach(match => {
+                            const team1Name = match.team1.name;
+                            const team1Logo = match.team1.logoUrl;
+                            const team2Name = match.team2.name;
+                            const team2Logo = match.team2.logoUrl;
+                            const team1Score = match.team1Score;
+                            const team2Score = match.team2Score;
+                            const startTime = new Date(match.startTime).toLocaleString('en-AU', {
+                                timeZone: 'Australia/Adelaide',
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                            });
+                            const matchStatus = match.matchStatus || 'UPCOMING';
+                            const venueName = match.venueCourt.venue.name;
+                            const courtNumber = match.venueCourt.courtNumber;
+                            const lat = match.venueCourt.lat;
+                            const lng = match.venueCourt.lng;
+
+                            const isTeam1Winning = team1Score > team2Score;
+                            const isTeam2Winning = team2Score > team1Score;
+                            const bothScoresZero = team1Score === 0 && team2Score === 0;
+
+                            const team1Display = bothScoresZero ? team1Name : (isTeam1Winning ? `<strong>${team1Name}</strong>` : team1Name);
+                            const team2Display = bothScoresZero ? team2Name : (isTeam2Winning ? `<strong>${team2Name}</strong>` : team2Name);
+                            const score1Display = bothScoresZero ? '' : (isTeam1Winning ? `<strong>${team1Score}</strong>` : team1Score);
+                            const score2Display = bothScoresZero ? '' : (isTeam2Winning ? `<strong>${team2Score}</strong>` : team2Score);
+
+                            const team1Class = team1Name.includes("Southern Tigers") ? 'highlight' : '';
+                            const team2Class = team2Name.includes("Southern Tigers") ? 'highlight' : '';
+
+                            const row = `<tr>
+                                <td>${startTime}</td>
+                                <td class="${team1Class}"><img src="${team1Logo}" alt="${team1Name} logo">${team1Display}</td>
+                                <td>${score1Display}</td> <!-- No highlight applied to score -->
+                                <td>${score2Display}</td> <!-- No highlight applied to score -->
+                                <td class="${team2Class}"><img src="${team2Logo}" alt="${team2Name} logo">${team2Display}</td>
+                                <td class="hide-mobile">${matchStatus}</td> <!-- Hide this cell on mobile -->
+                                <td><a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank">${venueName} - Court ${courtNumber}</a></td>
+                            </tr>`;
+                            
+                            roundTable += row;
+                        });
+
+                        roundTable += `</tbody></table>`;
+                        document.querySelector('#scores-container').innerHTML += roundTable;
+                    });
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        });
+    </script>
+</body>
+</html>
