@@ -27,6 +27,10 @@
             height: 150px;
             margin-bottom: 20px;
         }
+        .foul-limit {
+            color: red;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -39,16 +43,22 @@
 <div id="output-container"></div>
 
 <script>
+let playerFoulCount = {}; // Track personal fouls by player
+let teamFouls = {1: 0, 2: 0, 3: 0, 4: 0}; // Track team fouls by quarter
+
 // Function to process the pasted JSON data
 function processData() {
     const jsonData = document.getElementById('json-input').value;
-    
+
     try {
         const data = JSON.parse(jsonData);
         const outputContainer = document.getElementById('output-container');
         outputContainer.innerHTML = ''; // Clear previous output
 
         const groupedData = {};
+
+        // Sort events by timestamp (ascending)
+        data.sort((a, b) => a.timestamp - b.timestamp);
 
         // Group data by quarters (period id)
         data.forEach(event => {
@@ -65,7 +75,7 @@ function processData() {
             const headerRow = `<thead>
                                 <tr>
                                     <th>Quarter</th>
-                                    <th>Time Remaining (min)</th>
+                                    <th>Time Elapsed (min)</th>
                                     <th>Player Shirt Number</th>
                                     <th>Event</th>
                                     <th>Score</th>
@@ -89,8 +99,32 @@ function processData() {
                 shirtCell.textContent = event.players[0].shirt;
                 row.appendChild(shirtCell);
 
+                let eventDescription = event.stat.displayName;
+                const playerShirt = event.players[0].shirt;
+
+                // Track player personal fouls and display them
+                if (event.stat.displayName.includes("Personal Foul")) {
+                    if (!playerFoulCount[playerShirt]) {
+                        playerFoulCount[playerShirt] = 0;
+                    }
+                    playerFoulCount[playerShirt] += 1;
+
+                    eventDescription += ` [${playerFoulCount[playerShirt]}]`;
+
+                    // Highlight 5th personal foul in red and bold
+                    if (playerFoulCount[playerShirt] === 5) {
+                        eventDescription = eventDescription.replace("5", `<span class="foul-limit">5</span>`);
+                    }
+                }
+
+                // Track team fouls and display for personal fouls
+                if (event.stat.displayName.includes("Personal Foul")) {
+                    teamFouls[event.period.id] += 1;
+                    event.score = `Team Fouls: ${teamFouls[event.period.id]} - ${event.score}`;
+                }
+
                 const eventCell = document.createElement('td');
-                eventCell.textContent = event.stat.displayName;
+                eventCell.innerHTML = eventDescription;
                 row.appendChild(eventCell);
 
                 const scoreCell = document.createElement('td');
