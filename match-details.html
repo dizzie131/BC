@@ -30,7 +30,7 @@
 </head>
 <body>
     <h1>Match Details</h1>
-    <textarea id="data-input" placeholder="Match data will appear here..."></textarea>
+    <textarea id="data-input" placeholder="Match data will appear here..." readonly></textarea>
     <div id="output-container"></div>
 
     <script>
@@ -48,14 +48,13 @@
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    throw new Error('Network response was not ok: ' + response.statusText);
                 }
                 const data = await response.json();
                 
-                console.log(data); // Debug: Log the full API response
+                console.log(data); // Debugging: log the full API response
 
-                // Check if there are events and populate the textarea
-                if (data && data.events) {
+                if (data && data.events && data.events.length > 0) {
                     statsOutput.value = JSON.stringify(data.events, null, 2); // For debugging
                     generateTable(data.events);
                 } else {
@@ -82,7 +81,7 @@
                 const row = `<tr>
                     <td>${event.displayName || 'N/A'}</td>
                     <td>${event.teamId || 'N/A'}</td>
-                    <td>${event.timestamp || 'N/A'}</td>
+                    <td>${new Date(event.timestamp).toLocaleString() || 'N/A'}</td>
                 </tr>`;
                 table.innerHTML += row;
             });
