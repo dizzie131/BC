@@ -1,17 +1,184 @@
-<tbody>`;
-                        
-round.matches.forEach(match => {
-    // Existing code to gather match details...
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=1.0, user-scalable=no">
+    <title>Basketball Fixtures - Team 2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            word-wrap: break-word;
+            font-size: 14px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        img {
+            width: 35px;
+            height: 35px;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        .highlight {
+            background-color: #FEBE10;
+        }
+        @media (max-width: 600px) {
+            th, td {
+                font-size: 12px;
+            }
+            img {
+                width: 30px;
+                height: 30px;
+            }
+            .hide-mobile {
+                display: none;
+            }
+        }
+        #stats-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Basketball Fixtures - Team 2</h1>
+    <div id="scores-container">
+        <!-- Scores tables will be populated here -->
+    </div>
 
-    const row = `<tr>
-        <td>${startTime}</td>
-        <td class="${team1Class}"><img src="${team1Logo}" alt="${team1Name} logo">${team1Display}</td>
-        <td>${score1Display}</td>
-        <td>${score2Display}</td>
-        <td class="${team2Class}"><img src="${team2Logo}" alt="${team2Name} logo">${team2Display}</td>
-        <td class="hide-mobile">${matchStatus}</td>
-        <td><a href="match-details.html?matchId=${match.id}" class="view-details">View Details</a></td> <!-- Change made here -->
-    </tr>`;
-    
-    roundTable += row;
-});
+    <div id="stats-container">
+        <h2>Game Stats Report</h2>
+        <textarea id="stats-input" rows="10" style="width:100%;"></textarea>
+        <button id="generate-report">Generate Report</button>
+        <div id="report-output"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('https://api-basketball.squadi.com/livescores/round/matches?divisionId=9665&ignoreStatuses=[1]')
+                .then(response => response.json())
+                .then(data => {
+                    data.rounds.forEach(round => {
+                        let roundTable = `<h2>${round.name}</h2><table>
+                            <thead>
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>Home</th>
+                                    <th>Score</th>
+                                    <th>Score</th>
+                                    <th>Away</th>
+                                    <th class="hide-mobile">Status</th>
+                                    <th>Venue</th>
+                                    <th>Action</th> <!-- New Action Column -->
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                        
+                        round.matches.forEach(match => {
+                            const team1Name = match.team1.name;
+                            const team1Logo = match.team1.logoUrl;
+                            const team2Name = match.team2.name;
+                            const team2Logo = match.team2.logoUrl;
+                            const team1Score = match.team1Score;
+                            const team2Score = match.team2Score;
+                            const startTime = new Date(match.startTime).toLocaleString('en-AU', {
+                                timeZone: 'Australia/Adelaide',
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                            });
+                            const matchStatus = match.matchStatus || 'UPCOMING';
+                            const venueName = match.venueCourt.venue.name;
+                            const lat = match.venueCourt.lat;
+                            const lng = match.venueCourt.lng;
+
+                            const isTeam1Winning = team1Score > team2Score;
+                            const isTeam2Winning = team2Score > team1Score;
+                            const bothScoresZero = team1Score === 0 && team2Score === 0;
+
+                            const team1Display = bothScoresZero ? team1Name : (isTeam1Winning ? `<strong>${team1Name}</strong>` : team1Name);
+                            const team2Display = bothScoresZero ? team2Name : (isTeam2Winning ? `<strong>${team2Name}</strong>` : team2Name);
+                            const score1Display = bothScoresZero ? '' : (isTeam1Winning ? `<strong>${team1Score}</strong>` : team1Score);
+                            const score2Display = bothScoresZero ? '' : (isTeam2Winning ? `<strong>${team2Score}</strong>` : team2Score);
+
+                            const team1Class = team1Name.includes("Southern Tigers") ? 'highlight' : '';
+                            const team2Class = team2Name.includes("Southern Tigers") ? 'highlight' : '';
+
+                            const row = `<tr>
+                                <td>${startTime}</td>
+                                <td class="${team1Class}"><img src="${team1Logo}" alt="${team1Name} logo">${team1Display}</td>
+                                <td>${score1Display}</td>
+                                <td>${score2Display}</td>
+                                <td class="${team2Class}"><img src="${team2Logo}" alt="${team2Name} logo">${team2Display}</td>
+                                <td class="hide-mobile">${matchStatus}</td>
+                                <td><a href="match-details.html?matchId=${match.id}" class="view-details">View Details</a></td> <!-- Button to view details -->
+                            </tr>`;
+                            
+                            roundTable += row;
+                        });
+
+                        roundTable += `</tbody></table>`;
+                        document.querySelector('#scores-container').innerHTML += roundTable;
+                    });
+
+                    // Add event listeners for "View Details" buttons
+                    document.querySelectorAll('.view-details').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const matchId = this.getAttribute('data-matchid');
+                            fetch(`https://api-basketball.squadi.com/livescores/matches/public/events?matchId=${matchId}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    // Assuming data is in the expected format
+                                    document.getElementById('stats-input').value = JSON.stringify(data);
+                                    generateReport(); // Automatically generate report after fetching data
+                                })
+                                .catch(error => {
+                                    console.error('Error fetching match details:', error);
+                                    alert('Error loading match details.');
+                                });
+                        });
+                    });
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        });
+
+        function generateReport() {
+            const inputData = document.getElementById('stats-input').value;
+            const reportOutput = document.getElementById('report-output');
+
+            try {
+                const data = JSON.parse(inputData);
+                // Process the data as needed, create your report
+                let html = '<table><thead><tr><th>Event</th><th>Player Shirt</th><th>Team ID</th></tr></thead><tbody>';
+                
+                data.forEach(event => {
+                    const { displayName, players, teamId } = event;
+                    const playerShirt = players.length > 0 ? players[0].shirt : 'N/A';
+                    html += `<tr><td>${displayName}</td><td>${playerShirt}</td><td>${teamId}</td></tr>`;
+                });
+
+                html += '</tbody></table>';
+                reportOutput.innerHTML = html;
+            } catch (error) {
+                reportOutput.innerHTML = '<p>Error parsing JSON data.</p>';
+                console.error('Error parsing data:', error);
+            }
+        }
+
+        document.getElementById('generate-report').addEventListener('click', generateReport);
+    </script>
+</body>
+</html>
