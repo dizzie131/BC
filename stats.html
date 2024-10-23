@@ -77,16 +77,27 @@ async function fetchTeamLogos() {
             throw new Error('Unexpected data format for teams');
         }
 
+        // Log ladders to see their structure
+        console.log('Ladders:', data.ladders);
+
         // Populate teamLogos object with team ID and logo URL
         data.ladders.forEach(ladder => {
-            ladder.teams.forEach(team => {
-                teamLogos[team.id] = team.logo; // Adjust this based on actual field names
-            });
+            // Inspect ladder structure
+            console.log('Ladder:', ladder);
+            // Assuming teams are under a property, adjust accordingly
+            if (ladder.teams) {
+                ladder.teams.forEach(team => {
+                    teamLogos[team.id] = team.logo; // Adjust this based on actual field names
+                });
+            } else {
+                console.warn('No teams found in ladder:', ladder);
+            }
         });
     } catch (error) {
         alert('Error fetching team logos: ' + error.message);
     }
 }
+
 
 async function fetchMatchData() {
     const matchId = document.getElementById('matchid-input').value;
