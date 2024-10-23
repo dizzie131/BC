@@ -71,7 +71,6 @@
                                     <th>Away</th> <!-- Changed from Team 2 to Away -->
                                     <th class="hide-mobile">Status</th> <!-- Hide this column on mobile -->
                                     <th>Venue</th>
-                                    <th>Details</th> <!-- New column for match details -->
                                     <th>Stats</th> <!-- New column for stats link -->
                                 </tr>
                             </thead>
@@ -119,7 +118,6 @@
                                 <td class="${team2Class}"><img src="${team2Logo}" alt="${team2Name} logo">${team2Display}</td>
                                 <td class="hide-mobile">${matchStatus}</td> <!-- Hide this cell on mobile -->
                                 <td><a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank">${venueName} - Court ${courtNumber}</a></td>
-                                <td><a href="match-details.html?matchId=${match.id}">View Details</a></td> <!-- Link to match details -->
                                 <td><a href="https://dizzie131.github.io/BC/stats.html?matchId=${match.id}">View Stats</a></td> <!-- Link to stats page -->
                             </tr>`;
                             
