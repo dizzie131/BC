@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+        }
+        /* Add any additional styles you need */
+    </style>
+</head>
+<body>
+    <h1>Match Details</h1>
+    <div id="match-details"></div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const matchId = params.get('matchId');
+
+        if (matchId) {
+            fetch(`https://api-basketball.squadi.com/livescores/matches/public/events?matchId=${matchId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Process and format the data here
+                    let detailsHtml = '';
+                    data.forEach(event => {
+                        // Format each event as needed
+                        detailsHtml += `<p>${event.displayName} (Team ${event.teamId}) - ${event.timestamp}</p>`;
+                    });
+                    document.getElementById('match-details').innerHTML = detailsHtml;
+                })
+                .catch(error => console.error('Error fetching match details:', error));
+        } else {
+            document.getElementById('match-details').innerHTML = '<p>No match ID provided.</p>';
+        }
+    </script>
+</body>
+</html>
