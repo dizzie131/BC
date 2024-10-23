@@ -55,8 +55,37 @@
 
 <h2>Game Stats Report</h2>
 <div id="output-container"></div>
+<!-- Summary Scoreboard -->
+<div id="scoreboard" class="scoreboard" style="display:none;">
+    <div id="team1-info"></div>
+    <div id="team1-score"></div>
+    <div id="team2-info"></div>
+    <div id="team2-score"></div>
+</div>
 
 <script>
+    // Initialize team variables at the start of the script
+let team1Id, team2Id, team1Name, team2Name;
+let team1Score = 0, team2Score = 0;
+
+// Update the scoreboard in the processData function
+function updateScoreboard() {
+    const scoreboard = document.getElementById('scoreboard');
+    scoreboard.style.display = 'flex'; // Show the scoreboard
+
+    const team1Info = document.getElementById('team1-info');
+    team1Info.innerHTML = `<img src="${teamLogos[team1Id]}" alt="${team1Name} logo"> <strong>${team1Name}</strong>`;
+    
+    const team1ScoreDiv = document.getElementById('team1-score');
+    team1ScoreDiv.textContent = team1Score;
+
+    const team2Info = document.getElementById('team2-info');
+    team2Info.innerHTML = `<img src="${teamLogos[team2Id]}" alt="${team2Name} logo"> <strong>${team2Name}</strong>`;
+    
+    const team2ScoreDiv = document.getElementById('team2-score');
+    team2ScoreDiv.textContent = team2Score;
+}
+
 let teamLogos = {}; // Object to store team logos
 
 async function fetchTeamLogos() {
