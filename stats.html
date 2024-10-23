@@ -68,7 +68,12 @@ async function fetchTeamLogos() {
             throw new Error('Network response was not ok');
         }
         const teams = await response.json();
-        
+
+        // Ensure teams is an array before proceeding
+        if (!Array.isArray(teams)) {
+            throw new Error('Unexpected data format for teams');
+        }
+
         // Populate teamLogos object with team ID and logo URL
         teams.forEach(team => {
             teamLogos[team.id] = team.logo; // Assuming 'logo' holds the URL
@@ -96,7 +101,10 @@ async function fetchMatchData() {
     }
 }
 
-function processData() {
+async function processData() {
+    // Fetch team logos only when processing data
+    await fetchTeamLogos();
+
     const jsonData = document.getElementById('json-input').value;
 
     try {
@@ -202,9 +210,6 @@ function processData() {
         alert('Invalid JSON data. Please check the format and try again.');
     }
 }
-
-// Fetch team logos on page load
-fetchTeamLogos();
 </script>
 
 </body>
