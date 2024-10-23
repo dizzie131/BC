@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Stats Report</title>
     <style>
-        /* Same styles as before */
         body {
             font-family: Arial, sans-serif;
             padding: 10px;
@@ -36,10 +35,6 @@
             color: red;
             font-weight: bold;
         }
-        canvas {
-            margin-top: 20px;
-            max-width: 100%;
-        }
     </style>
 </head>
 <body>
@@ -51,21 +46,10 @@
 <h2>Game Stats Report</h2>
 <div id="output-container"></div>
 
-<!-- Graph container -->
-<canvas id="scoreChart"></canvas>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
 // Foul tracking variables
 let playerFoulCount = {}; // Track personal fouls by player
 let teamFouls = {1: 0, 2: 0, 3: 0, 4: 0}; // Track team fouls by quarter
-
-// Score tracking arrays
-let team1Scores = [];
-let team2Scores = [];
-let timeStamps = []; // Used to record times for the graph
-let teamNames = {};
 
 function processData() {
     const jsonData = document.getElementById('json-input').value;
@@ -89,7 +73,7 @@ function processData() {
             groupedData[periodId].push(event);
         });
 
-        // Create tables for each quarter and collect score data for graph
+        // Create tables for each quarter
         for (const quarter in groupedData) {
             const table = document.createElement('table');
             const headerRow = `<thead>
@@ -130,16 +114,22 @@ function processData() {
 
                 // Track player personal fouls and display them
                 if (event.stat.displayName.includes("Personal Foul")) {
+                    // Initialize player foul count if not already tracked
                     if (!playerFoulCount[playerShirt]) {
                         playerFoulCount[playerShirt] = 0;
                     }
+                    // Increment foul count for the player
                     playerFoulCount[playerShirt] += 1;
+
+                    // Add foul count next to event
                     eventDescription += ` [${playerFoulCount[playerShirt]}]`;
 
+                    // Highlight the 5th personal foul in red and bold
                     if (playerFoulCount[playerShirt] === 5) {
                         eventDescription = eventDescription.replace("5", `<span class="foul-limit">5</span>`);
                     }
 
+                    // Update team fouls for the current period
                     teamFouls[event.period.id] += 1;
                     event.score = `Team Fouls: ${teamFouls[event.period.id]} - ${event.score}`;
                 }
@@ -148,6 +138,7 @@ function processData() {
                 eventCell.innerHTML = eventDescription;
                 row.appendChild(eventCell);
 
+                // Add the team column
                 const teamCell = document.createElement('td');
                 if (event.teamId === 63366) {
                     teamCell.innerHTML = `<img src="https://storage.googleapis.com/download/storage/v1/b/basketball-prod-643da.appspot.com/o/%2Forganisation%2Flogo_org_477_1689920341963.png?generation=1689920342036203&alt=media" alt="Tigers logo">`;
@@ -161,129 +152,14 @@ function processData() {
                 row.appendChild(scoreCell);
 
                 tbody.appendChild(row);
-
-                // Track scores for the graph
-                const [team1Score, team2Score] = event.score.replace("[", "").replace("]", "").split(" - ").map(Number);
-                team1Scores.push(team1Score);
-                team2Scores.push(team2Score);
-                timeStamps.push(event.minute);
-
-                // Keep track of team names if not already stored
-                teamNames[event.teamId] = event.teamId === 63366 ? "Tigers" : event.teamId;
             });
 
             table.appendChild(tbody);
             outputContainer.appendChild(table);
         }
-
-        // After processing data, render the line graph
-        renderScoreGraph();
-
     } catch (error) {
         alert('Invalid JSON data. Please check the format and try again.');
     }
-}
-
-function renderScoreGraph() {
-    const ctx = document.getElementById('scoreChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: timeStamps,
-            datasets: [
-                {
-                    label: 'Tigers',
-                    data: team1Scores,
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    fill: false,
-                    tension: 0.1
-                },
-                {
-                    label: 'Opponent',
-                    data: team2Scores,
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    fill: false,
-                    tension: 0.1
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Time Elapsed (minutes)'
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Score'
-                    },
-                    beginAtZero: true
-                }
-            },
-            plugins: {
-                annotation: {
-                    annotations: {
-                        quarters: [
-                            {
-                                type: 'line',
-                                scaleID: 'x',
-                                value: 10,
-                                borderColor: 'rgba(0, 0, 0, 0.5)',
-                                borderWidth: 2,
-                                label: {
-                                    content: 'Quarter 1',
-                                    enabled: true,
-                                    position: 'start'
-                                }
-                            },
-                            {
-                                type: 'line',
-                                scaleID: 'x',
-                                value: 20,
-                                borderColor: 'rgba(0, 0, 0, 0.5)',
-                                borderWidth: 2,
-                                label: {
-                                    content: 'Quarter 2',
-                                    enabled: true,
-                                    position: 'start'
-                                }
-                            },
-                            {
-                                type: 'line',
-                                scaleID: 'x',
-                                value: 30,
-                                borderColor: 'rgba(0, 0, 0, 0.5)',
-                                borderWidth: 2,
-                                label: {
-                                    content: 'Quarter 3',
-                                    enabled: true,
-                                    position: 'start'
-                                }
-                            },
-                            {
-                                type: 'line',
-                                scaleID: 'x',
-                                value: 40,
-                                borderColor: 'rgba(0, 0, 0, 0.5)',
-                                borderWidth: 2,
-                                label: {
-                                    content: 'Quarter 4',
-                                    enabled: true,
-                                    position: 'start'
-                                }
-                            }
-                        ]
-                    }
-                }
-            }
-        }
-    });
 }
 </script>
 
