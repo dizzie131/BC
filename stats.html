@@ -43,10 +43,10 @@
 <div id="output-container"></div>
 
 <script>
+// Foul tracking variables
 let playerFoulCount = {}; // Track personal fouls by player
 let teamFouls = {1: 0, 2: 0, 3: 0, 4: 0}; // Track team fouls by quarter
 
-// Function to process the pasted JSON data
 function processData() {
     const jsonData = document.getElementById('json-input').value;
 
@@ -104,21 +104,22 @@ function processData() {
 
                 // Track player personal fouls and display them
                 if (event.stat.displayName.includes("Personal Foul")) {
+                    // Initialize player foul count if not already tracked
                     if (!playerFoulCount[playerShirt]) {
                         playerFoulCount[playerShirt] = 0;
                     }
+                    // Increment foul count for the player
                     playerFoulCount[playerShirt] += 1;
 
+                    // Add foul count next to event
                     eventDescription += ` [${playerFoulCount[playerShirt]}]`;
 
-                    // Highlight 5th personal foul in red and bold
+                    // Highlight the 5th personal foul in red and bold
                     if (playerFoulCount[playerShirt] === 5) {
                         eventDescription = eventDescription.replace("5", `<span class="foul-limit">5</span>`);
                     }
-                }
 
-                // Track team fouls and display for personal fouls
-                if (event.stat.displayName.includes("Personal Foul")) {
+                    // Update team fouls for the current period
                     teamFouls[event.period.id] += 1;
                     event.score = `Team Fouls: ${teamFouls[event.period.id]} - ${event.score}`;
                 }
