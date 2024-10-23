@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Stats Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Paste Game Stats JSON</h1>
+<textarea id="json-input" placeholder="Paste JSON data here..."></textarea>
+<button onclick="processData()">Process Data</button>
+
+<h2>Game Stats Report</h2>
+<div id="output-container"></div>
+
+<script>
+// Function to process the pasted JSON data
+function processData() {
+    const jsonData = document.getElementById('json-input').value;
+    
+    try {
+        const data = JSON.parse(jsonData);
+        const outputContainer = document.getElementById('output-container');
+        outputContainer.innerHTML = ''; // Clear previous output
+
+        const groupedData = {};
+
+        // Group data by quarters (period id)
+        data.forEach(event => {
+            const periodId = event.period.id;
+            if (!groupedData[periodId]) {
+                groupedData[periodId] = [];
+            }
+            groupedData[periodId].push(event);
+        });
+
+        // Create tables for each quarter
+        for (const quarter in groupedData) {
+            const table = document.createElement('table');
+            const headerRow = `<thead>
+                                <tr>
+                                    <th>Quarter</th>
+                                    <th>Time Remaining (min)</th>
+                                    <th>Player Shirt Number</th>
+                                    <th>Event</th>
+                                    <th>Score</th>
+                                </tr>
+                               </thead>`;
+            table.innerHTML = headerRow;
+
+            const tbody = document.createElement('tbody');
+            groupedData[quarter].forEach(event => {
+                const row = document.createElement('tr');
+
+                const periodCell = document.createElement('td');
+                periodCell.textContent = event.period.id;
+                row.appendChild(periodCell);
+
+                const timeCell = document.createElement('td');
+                timeCell.textContent = event.minute;
+                row.appendChild(timeCell);
+
+                const shirtCell = document.createElement('td');
+                shirtCell.textContent = event.players[0].shirt;
+                row.appendChild(shirtCell);
+
+                const eventCell = document.createElement('td');
+                eventCell.textContent = event.stat.displayName;
+                row.appendChild(eventCell);
+
+                const scoreCell = document.createElement('td');
+                scoreCell.textContent = event.score;
+                row.appendChild(scoreCell);
+
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(tbody);
+            outputContainer.appendChild(table);
+        }
+    } catch (error) {
+        alert('Invalid JSON data. Please check the format and try again.');
+    }
+}
+</script>
+
+</body>
+</html>
