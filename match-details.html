@@ -12,13 +12,12 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-top: 20px;
         }
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
-            word-wrap: break-word; /* Prevent overflow of long text */
         }
         th {
             background-color: #f2f2f2;
@@ -27,55 +26,69 @@
 </head>
 <body>
     <h1>Match Details</h1>
-    <div id="stats-container">
-        <textarea id="stats-input" style="width: 100%; height: 200px;" placeholder="Game stats will be loaded here..."></textarea>
-        <button id="load-stats">Load Stats</button>
-    </div>
-    <div id="stats-output"></div>
+    <textarea id="data-input" rows="10" cols="100" placeholder="Match data will appear here..."></textarea>
+    <div id="output-container"></div>
 
     <script>
-        // Function to fetch match details based on match ID
-        function getMatchIdFromURL() {
+        // Function to get match ID from URL
+        function getMatchId() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('matchId');
         }
 
-        document.addEventListener('DOMContentLoaded', function () {
-            const matchId = getMatchIdFromURL();
-            const statsOutput = document.getElementById('stats-output');
+        // Fetch match data
+        async function fetchMatchData() {
+            const matchId = getMatchId();
+            const url = `https://api-basketball.squadi.com/livescores/matches/public/events?matchId=${matchId}`;
+            const statsOutput = document.getElementById('data-input');
+            const outputContainer = document.getElementById('output-container');
 
-            // Fetching the game stats from the API
-            if (matchId) {
-                const apiUrl = `https://api-basketball.squadi.com/livescores/matches/public/events?matchId=${matchId}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
 
-                fetch(apiUrl)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Process data and format for display
-                        let output = '<table><thead><tr><th>Player</th><th>Event</th><th>Team</th><th>Timestamp</th></tr></thead><tbody>';
-                        data.events.forEach(event => {
-                            const playerName = event.players[0]?.name || "Unknown Player";
-                            const eventName = event.displayName || "Unknown Event";
-                            const teamId = event.teamId || "Unknown Team";
-                            const timestamp = new Date(event.timestamp).toLocaleString();
-                            output += `<tr>
-                                <td>${playerName}</td>
-                                <td>${eventName}</td>
-                                <td>${teamId}</td>
-                                <td>${timestamp}</td>
-                            </tr>`;
-                        });
-                        output += '</tbody></table>';
-                        statsOutput.innerHTML = output;
-                    })
-                    .catch(error => {
-                        console.error('Error fetching match data:', error);
-                        statsOutput.innerHTML = 'Error fetching match data.';
-                    });
-            } else {
-                statsOutput.innerHTML = 'No match ID provided.';
+                // Check if there are events and populate the textarea
+                if (data && data.events) {
+                    statsOutput.value = JSON.stringify(data.events, null, 2); // For debugging, display raw JSON
+                    generateTable(data.events); // Create the table from events
+                } else {
+                    statsOutput.value = 'No match data available.';
+                }
+            } catch (error) {
+                console.error('Error fetching match data:', error);
+                statsOutput.value = 'Error fetching match data: ' + error.message;
             }
-        });
+        }
+
+        // Function to generate a table from the match events
+        function generateTable(events) {
+            let output = `<table>
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Team ID</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            events.forEach(event => {
+                output += `<tr>
+                    <td>${event.displayName || 'N/A'}</td>
+                    <td>${event.teamId || 'N/A'}</td>
+                    <td>${new Date(event.timestamp).toLocaleString()}</td>
+                </tr>`;
+            });
+
+            output += `</tbody></table>`;
+            document.getElementById('output-container').innerHTML = output;
+        }
+
+        // Call the fetch function on load
+        document.addEventListener('DOMContentLoaded', fetchMatchData);
     </script>
 </body>
 </html>
