@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Stats Report</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -39,10 +38,6 @@
         #matchid-container {
             margin-bottom: 20px;
         }
-        canvas {
-            max-width: 600px; /* Adjust as needed */
-            margin: auto;
-        }
     </style>
 </head>
 <body>
@@ -59,18 +54,11 @@
 <button onclick="processData()">Process Data</button>
 
 <h2>Game Stats Report</h2>
-<canvas id="scoreChart"></canvas>
 <div id="output-container"></div>
 
 <script>
 let teamLogos = {}; // Object to store team logos
-let team1Score = 0;
-let team2Score = 0;
-let labels = [];
-let team1Scores = [];
-let team2Scores = [];
 
-// Function to fetch team logos
 async function fetchTeamLogos() {
     const url = 'https://api-basketball.squadi.com/livescores/teams/ladder/v2?divisionIds=9665&competitionKey=57857f42-2493-49ad-9396-5471910edeb3&filteredOutCompStatuses=1&showForm=1&sportRefId=2';
     
@@ -81,8 +69,17 @@ async function fetchTeamLogos() {
         }
         const data = await response.json();
 
+        // Log the fetched data for debugging
+        console.log('Fetched team data:', data);
+
+        // Check if data contains the ladders array
+        if (!data || !data.ladders || !Array.isArray(data.ladders)) {
+            throw new Error('Unexpected data format for teams');
+        }
+
         // Populate teamLogos object with team ID and logo URL
         data.ladders.forEach(ladder => {
+            // Since each ladder contains team info directly
             teamLogos[ladder.id] = ladder.logoUrl; // Use ladder.id for team ID
         });
     } catch (error) {
@@ -90,7 +87,6 @@ async function fetchTeamLogos() {
     }
 }
 
-// Fetch match data function
 async function fetchMatchData() {
     const matchId = document.getElementById('matchid-input').value;
     const url = `https://api-basketball.squadi.com/livescores/matches/public/events?matchId=${matchId}`;
@@ -101,17 +97,16 @@ async function fetchMatchData() {
             throw new Error('Network response was not ok');
         }
         const data = await response.json();
-
+        
         // Place the fetched JSON into the textarea
         document.getElementById('json-input').value = JSON.stringify(data, null, 2);
-        return data; // Return fetched data
     } catch (error) {
         alert('Error fetching match data: ' + error.message);
     }
 }
 
-// Process data function
 async function processData() {
+    // Fetch team logos only when processing data
     await fetchTeamLogos();
 
     const jsonData = document.getElementById('json-input').value;
@@ -121,83 +116,103 @@ async function processData() {
         const outputContainer = document.getElementById('output-container');
         outputContainer.innerHTML = ''; // Clear previous output
 
-        // Initialize scores and labels
-        labels = [];
-        team1Scores = [];
-        team2Scores = [];
+        const groupedData = {};
 
         // Sort events by timestamp (ascending)
         data.sort((a, b) => a.timestamp - b.timestamp);
 
-        // Initialize team scores
-        team1Score = 0;
-        team2Score = 0;
-
-        // Create tables for each quarter and collect score data
+        // Group data by quarters (period id)
         data.forEach(event => {
-            const eventTimestamp = new Date(event.timestamp * 1000).toLocaleTimeString(); // Convert to readable time
-            labels.push(eventTimestamp); // Add timestamp to labels
-
-            if (event.stat.displayName.includes("Score")) {
-                if (event.teamId === 'team1Id') { // Replace 'team1Id' with your actual team ID
-                    team1Score += event.score;
-                } else if (event.teamId === 'team2Id') { // Replace 'team2Id' with your actual team ID
-                    team2Score += event.score;
-                }
+            const periodId = event.period.id;
+            if (!groupedData[periodId]) {
+                groupedData[periodId] = [];
             }
-
-            // Store scores for the graph
-            team1Scores.push(team1Score);
-            team2Scores.push(team2Score);
+            groupedData[periodId].push(event);
         });
 
-        // Create the line graph
-        createScoreChart();
+        // Create tables for each quarter
+        for (const quarter in groupedData) {
+            const table = document.createElement('table');
+            const headerRow = `<thead>
+                                <tr>
+                                    <th>Quarter</th>
+                                    <th>Time Elapsed (min)</th>
+                                    <th>Player Name</th>
+                                    <th>Shirt Number</th>
+                                    <th>Event</th>
+                                    <th>Team</th>
+                                    <th>Score</th>
+                                </tr>
+                               </thead>`;
+            table.innerHTML = headerRow;
+
+            const tbody = document.createElement('tbody');
+            groupedData[quarter].forEach(event => {
+                const row = document.createElement('tr');
+
+                const periodCell = document.createElement('td');
+                periodCell.textContent = event.period.id;
+                row.appendChild(periodCell);
+
+                const timeCell = document.createElement('td');
+                timeCell.textContent = event.minute;
+                row.appendChild(timeCell);
+
+                const playerNameCell = document.createElement('td');
+                playerNameCell.textContent = event.players[0].name;
+                row.appendChild(playerNameCell);
+
+                const shirtCell = document.createElement('td');
+                shirtCell.textContent = event.players[0].shirt;
+                row.appendChild(shirtCell);
+
+                let eventDescription = event.stat.displayName;
+                const playerShirt = event.players[0].shirt;
+
+                // Track player personal fouls and display them
+                if (event.stat.displayName.includes("Personal Foul")) {
+                    if (!playerFoulCount[playerShirt]) {
+                        playerFoulCount[playerShirt] = 0;
+                    }
+                    playerFoulCount[playerShirt] += 1;
+
+                    eventDescription += ` [${playerFoulCount[playerShirt]}]`;
+
+                    if (playerFoulCount[playerShirt] === 5) {
+                        eventDescription = eventDescription.replace("5", `<span class="foul-limit">5</span>`);
+                    }
+
+                    teamFouls[event.period.id] += 1;
+                    event.score = `Team Fouls: ${teamFouls[event.period.id]} - ${event.score}`;
+                }
+
+                const eventCell = document.createElement('td');
+                eventCell.innerHTML = eventDescription;
+                row.appendChild(eventCell);
+
+                // Add the team logo based on team ID
+                const teamCell = document.createElement('td');
+                const logoUrl = teamLogos[event.teamId]; // Lookup logo by team ID
+                if (logoUrl) {
+                    teamCell.innerHTML = `<img src="${logoUrl}" alt="Team logo">`;
+                } else {
+                    teamCell.textContent = event.teamId; // Fallback if logo not found
+                }
+                row.appendChild(teamCell);
+
+                const scoreCell = document.createElement('td');
+                scoreCell.textContent = event.score;
+                row.appendChild(scoreCell);
+
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(tbody);
+            outputContainer.appendChild(table);
+        }
     } catch (error) {
         alert('Invalid JSON data. Please check the format and try again.');
     }
-}
-
-// Function to create the score chart
-function createScoreChart() {
-    const ctx = document.getElementById('scoreChart').getContext('2d');
-    const scoreChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Team 1 Score', // Adjust team names accordingly
-                    data: team1Scores,
-                    borderColor: 'blue',
-                    fill: false,
-                },
-                {
-                    label: 'Team 2 Score',
-                    data: team2Scores,
-                    borderColor: 'red',
-                    fill: false,
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Time'
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Score'
-                    }
-                }
-            }
-        }
-    });
 }
 
 // Function to get URL parameters
@@ -211,10 +226,11 @@ window.onload = async function() {
     const matchId = getQueryParameter('matchId');
     if (matchId) {
         document.getElementById('matchid-input').value = matchId; // Set the matchId in the textbox
-        const data = await fetchMatchData(); // Automatically fetch match data
+        await fetchMatchData(); // Automatically fetch match data
         await processData(); // Automatically process data
     }
 };
 </script>
+
 </body>
 </html>
