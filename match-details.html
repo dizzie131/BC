@@ -22,6 +22,13 @@
         th {
             background-color: #f2f2f2;
         }
+        .highlight {
+            background-color: #FEBE10;
+        }
+        .foul-red {
+            color: red;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -38,26 +45,73 @@
         }
 
         const matchId = getQueryParam('matchId');
+
         if (matchId) {
             fetch(`https://api-basketball.squadi.com/livescores/matches/public/events?matchId=${matchId}`)
                 .then(response => response.json())
                 .then(data => {
                     const container = document.getElementById('match-details-container');
-                    if (data && data.length > 0) {
-                        let html = '<table><thead><tr><th>Event</th><th>Player</th><th>Time</th><th>Team ID</th></tr></thead><tbody>';
-                        data.forEach(event => {
-                            const playerName = event.player ? event.player.name : 'N/A'; // Get player name if available
-                            const displayName = event.displayName || 'N/A'; // Get event display name
-                            const timestamp = new Date(event.timestamp).toLocaleTimeString('en-AU'); // Format timestamp
-                            const teamId = event.teamId || 'N/A'; // Get team ID
+                    const playerFouls = {}; // Object to track personal fouls
+                    let teamScores = { 63189: 0, 63366: 0 }; // Initialize team scores
+                    let eventsByQuarter = {}; // Object to organize events by quarter
 
-                            html += `<tr>
-                                <td>${displayName}</td>
-                                <td>${playerName}</td>
-                                <td>${timestamp}</td>
-                                <td>${teamId}</td>
-                            </tr>`;
+                    if (data && data.length > 0) {
+                        data.forEach(event => {
+                            const { timestamp, teamId, displayName, players } = event;
+                            const periodId = event.period?.id;
+
+                            // Initialize quarter object if not exists
+                            if (!eventsByQuarter[periodId]) {
+                                eventsByQuarter[periodId] = [];
+                            }
+
+                            // Check for player fouls and update the playerFouls object
+                            if (displayName === "Personal Foul" && players.length > 0) {
+                                const player = players[0];
+                                playerFouls[player.shirt] = (playerFouls[player.shirt] || 0) + 1;
+                                eventsByQuarter[periodId].push({
+                                    displayName: `${displayName} [${playerFouls[player.shirt]}]`,
+                                    shirt: player.shirt,
+                                    teamId,
+                                    timestamp,
+                                    isFoul: true
+                                });
+                            } else {
+                                eventsByQuarter[periodId].push({
+                                    displayName,
+                                    shirt: players.length > 0 ? players[0].shirt : 'N/A',
+                                    teamId,
+                                    timestamp,
+                                    isFoul: false
+                                });
+                            }
+
+                            // Update team scores based on scoring events
+                            if (displayName === "2 Points Made") {
+                                teamScores[teamId] += 2; // Add 2 points for scoring
+                            } else if (displayName === "3 Points Made") {
+                                teamScores[teamId] += 3; // Add 3 points for scoring
+                            }
                         });
+
+                        // Generate HTML for events
+                        let html = '<table><thead><tr><th>Quarter</th><th>Event</th><th>Player Shirt</th><th>Team ID</th></tr></thead><tbody>';
+                        
+                        Object.keys(eventsByQuarter).forEach(period => {
+                            const events = eventsByQuarter[period];
+                            events.forEach(event => {
+                                const eventDisplay = event.isFoul && playerFouls[event.shirt] === 5 
+                                    ? `<span class="foul-red">${event.displayName}</span>`
+                                    : event.displayName;
+                                html += `<tr>
+                                    <td>${period}</td>
+                                    <td>${eventDisplay}</td>
+                                    <td>${event.shirt}</td>
+                                    <td>${event.teamId}</td>
+                                </tr>`;
+                            });
+                        });
+
                         html += '</tbody></table>';
                         container.innerHTML = html;
                     } else {
