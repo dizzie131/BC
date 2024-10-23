@@ -67,21 +67,25 @@ async function fetchTeamLogos() {
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
-        const teams = await response.json();
+        const data = await response.json();
 
-        // Ensure teams is an array before proceeding
-        if (!Array.isArray(teams)) {
+        // Log the fetched data for debugging
+        console.log('Fetched team data:', data);
+
+        // Check if data contains the teams array
+        if (!data || !data.teams || !Array.isArray(data.teams)) {
             throw new Error('Unexpected data format for teams');
         }
 
         // Populate teamLogos object with team ID and logo URL
-        teams.forEach(team => {
-            teamLogos[team.id] = team.logo; // Assuming 'logo' holds the URL
+        data.teams.forEach(team => {
+            teamLogos[team.id] = team.logo; // Adjust this based on actual field names
         });
     } catch (error) {
         alert('Error fetching team logos: ' + error.message);
     }
 }
+
 
 async function fetchMatchData() {
     const matchId = document.getElementById('matchid-input').value;
