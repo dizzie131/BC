@@ -7,7 +7,11 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 10px;
+            padding: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
         }
         table {
             width: 100%;
@@ -26,17 +30,15 @@
 </head>
 <body>
     <h1>Match Details</h1>
-    <textarea id="data-input" rows="10" cols="100" placeholder="Match data will appear here..."></textarea>
+    <textarea id="data-input" placeholder="Match data will appear here..."></textarea>
     <div id="output-container"></div>
 
     <script>
-        // Function to get match ID from URL
         function getMatchId() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('matchId');
         }
 
-        // Fetch match data
         async function fetchMatchData() {
             const matchId = getMatchId();
             const url = `https://api-basketball.squadi.com/livescores/matches/public/events?matchId=${matchId}`;
@@ -49,11 +51,13 @@
                     throw new Error('Network response was not ok');
                 }
                 const data = await response.json();
+                
+                console.log(data); // Debug: Log the full API response
 
                 // Check if there are events and populate the textarea
                 if (data && data.events) {
-                    statsOutput.value = JSON.stringify(data.events, null, 2); // For debugging, display raw JSON
-                    generateTable(data.events); // Create the table from events
+                    statsOutput.value = JSON.stringify(data.events, null, 2); // For debugging
+                    generateTable(data.events);
                 } else {
                     statsOutput.value = 'No match data available.';
                 }
@@ -63,31 +67,29 @@
             }
         }
 
-        // Function to generate a table from the match events
         function generateTable(events) {
-            let output = `<table>
-                <thead>
-                    <tr>
-                        <th>Event</th>
-                        <th>Team ID</th>
-                        <th>Timestamp</th>
-                    </tr>
-                </thead>
-                <tbody>`;
+            const outputContainer = document.getElementById('output-container');
+            outputContainer.innerHTML = ''; // Clear previous content
+            const table = document.createElement('table');
+            const headerRow = `<tr>
+                <th>Event</th>
+                <th>Team ID</th>
+                <th>Timestamp</th>
+            </tr>`;
+            table.innerHTML = headerRow;
 
             events.forEach(event => {
-                output += `<tr>
+                const row = `<tr>
                     <td>${event.displayName || 'N/A'}</td>
                     <td>${event.teamId || 'N/A'}</td>
-                    <td>${new Date(event.timestamp).toLocaleString()}</td>
+                    <td>${event.timestamp || 'N/A'}</td>
                 </tr>`;
+                table.innerHTML += row;
             });
 
-            output += `</tbody></table>`;
-            document.getElementById('output-container').innerHTML = output;
+            outputContainer.appendChild(table);
         }
 
-        // Call the fetch function on load
         document.addEventListener('DOMContentLoaded', fetchMatchData);
     </script>
 </body>
