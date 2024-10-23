@@ -27,6 +27,10 @@
             height: 150px;
             margin-bottom: 20px;
         }
+        img {
+            width: 35px; /* Team logo size */
+            height: 35px;
+        }
         .foul-limit {
             color: red;
             font-weight: bold;
@@ -76,8 +80,10 @@ function processData() {
                                 <tr>
                                     <th>Quarter</th>
                                     <th>Time Elapsed (min)</th>
-                                    <th>Player Shirt Number</th>
+                                    <th>Player Name</th>
+                                    <th>Shirt Number</th>
                                     <th>Event</th>
+                                    <th>Team</th>
                                     <th>Score</th>
                                 </tr>
                                </thead>`;
@@ -94,6 +100,10 @@ function processData() {
                 const timeCell = document.createElement('td');
                 timeCell.textContent = event.minute;
                 row.appendChild(timeCell);
+
+                const playerNameCell = document.createElement('td');
+                playerNameCell.textContent = event.players[0].name;
+                row.appendChild(playerNameCell);
 
                 const shirtCell = document.createElement('td');
                 shirtCell.textContent = event.players[0].shirt;
@@ -127,6 +137,15 @@ function processData() {
                 const eventCell = document.createElement('td');
                 eventCell.innerHTML = eventDescription;
                 row.appendChild(eventCell);
+
+                // Add the team column
+                const teamCell = document.createElement('td');
+                if (event.teamId === 63366) {
+                    teamCell.innerHTML = `<img src="tigers-logo.png" alt="Tigers logo">`;
+                } else {
+                    teamCell.textContent = event.teamId;
+                }
+                row.appendChild(teamCell);
 
                 const scoreCell = document.createElement('td');
                 scoreCell.textContent = event.score;
