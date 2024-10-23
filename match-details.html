@@ -47,6 +47,7 @@
         const matchId = getQueryParam('matchId');
 
         if (matchId) {
+            // Fetching match events based on the matchId
             fetch(`https://api-basketball.squadi.com/livescores/matches/public/events?matchId=${matchId}`)
                 .then(response => response.json())
                 .then(data => {
@@ -55,10 +56,11 @@
                     let teamScores = { 63189: 0, 63366: 0 }; // Initialize team scores
                     let eventsByQuarter = {}; // Object to organize events by quarter
 
-                    if (data && data.length > 0) {
+                    // Check if data has the expected structure
+                    if (data && Array.isArray(data)) {
                         data.forEach(event => {
-                            const { timestamp, teamId, displayName, players } = event;
-                            const periodId = event.period?.id;
+                            const { timestamp, teamId, displayName, players, period } = event;
+                            const periodId = period?.id; // Use optional chaining to avoid errors
 
                             // Initialize quarter object if not exists
                             if (!eventsByQuarter[periodId]) {
@@ -76,10 +78,12 @@
                                     timestamp,
                                     isFoul: true
                                 });
-                            } else {
+                            } else if (players.length > 0) {
+                                // Ensure player exists before accessing
+                                const player = players[0];
                                 eventsByQuarter[periodId].push({
                                     displayName,
-                                    shirt: players.length > 0 ? players[0].shirt : 'N/A',
+                                    shirt: player.shirt,
                                     teamId,
                                     timestamp,
                                     isFoul: false
