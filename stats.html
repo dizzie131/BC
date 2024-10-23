@@ -57,6 +57,27 @@
 <div id="output-container"></div>
 
 <script>
+let teamLogos = {}; // Object to store team logos
+
+async function fetchTeamLogos() {
+    const url = 'https://api-basketball.squadi.com/livescores/teams/ladder/v2?divisionIds=9665&competitionKey=57857f42-2493-49ad-9396-5471910edeb3&filteredOutCompStatuses=1&showForm=1&sportRefId=2';
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const teams = await response.json();
+        
+        // Populate teamLogos object with team ID and logo URL
+        teams.forEach(team => {
+            teamLogos[team.id] = team.logo; // Assuming 'logo' holds the URL
+        });
+    } catch (error) {
+        alert('Error fetching team logos: ' + error.message);
+    }
+}
+
 async function fetchMatchData() {
     const matchId = document.getElementById('matchid-input').value;
     const url = `https://api-basketball.squadi.com/livescores/matches/public/events?matchId=${matchId}`;
@@ -157,11 +178,13 @@ function processData() {
                 eventCell.innerHTML = eventDescription;
                 row.appendChild(eventCell);
 
+                // Add the team logo based on team ID
                 const teamCell = document.createElement('td');
-                if (event.teamId === 63366) {
-                    teamCell.innerHTML = `<img src="https://storage.googleapis.com/download/storage/v1/b/basketball-prod-643da.appspot.com/o/%2Forganisation%2Flogo_org_477_1689920341963.png?generation=1689920342036203&alt=media" alt="Tigers logo">`;
+                const logoUrl = teamLogos[event.teamId]; // Lookup logo by team ID
+                if (logoUrl) {
+                    teamCell.innerHTML = `<img src="${logoUrl}" alt="Team logo">`;
                 } else {
-                    teamCell.textContent = event.teamId;
+                    teamCell.textContent = event.teamId; // Fallback if logo not found
                 }
                 row.appendChild(teamCell);
 
@@ -179,6 +202,9 @@ function processData() {
         alert('Invalid JSON data. Please check the format and try again.');
     }
 }
+
+// Fetch team logos on page load
+fetchTeamLogos();
 </script>
 
 </body>
