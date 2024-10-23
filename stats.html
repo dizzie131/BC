@@ -72,20 +72,21 @@ async function fetchTeamLogos() {
         // Log the fetched data for debugging
         console.log('Fetched team data:', data);
 
-        // Check if data contains the teams array
-        if (!data || !data.teams || !Array.isArray(data.teams)) {
+        // Check if data contains the ladders array
+        if (!data || !data.ladders || !Array.isArray(data.ladders)) {
             throw new Error('Unexpected data format for teams');
         }
 
         // Populate teamLogos object with team ID and logo URL
-        data.teams.forEach(team => {
-            teamLogos[team.id] = team.logo; // Adjust this based on actual field names
+        data.ladders.forEach(ladder => {
+            ladder.teams.forEach(team => {
+                teamLogos[team.id] = team.logo; // Adjust this based on actual field names
+            });
         });
     } catch (error) {
         alert('Error fetching team logos: ' + error.message);
     }
 }
-
 
 async function fetchMatchData() {
     const matchId = document.getElementById('matchid-input').value;
