@@ -87,7 +87,6 @@ async function fetchTeamLogos() {
     }
 }
 
-
 async function fetchMatchData() {
     const matchId = document.getElementById('matchid-input').value;
     const url = `https://api-basketball.squadi.com/livescores/matches/public/events?matchId=${matchId}`;
@@ -215,23 +214,23 @@ async function processData() {
         alert('Invalid JSON data. Please check the format and try again.');
     }
 }
-</script>
-<script>
+
 // Function to get URL parameters
 function getQueryParameter(name) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(name);
 }
 
-// On page load, populate the match ID if available
-window.onload = function() {
+// On page load, populate the match ID if available and automatically fetch and process data
+window.onload = async function() {
     const matchId = getQueryParameter('matchId');
     if (matchId) {
         document.getElementById('matchid-input').value = matchId; // Set the matchId in the textbox
+        await fetchMatchData(); // Automatically fetch match data
+        await processData(); // Automatically process data
     }
 };
 </script>
-
 
 </body>
 </html>
