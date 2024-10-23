@@ -216,6 +216,21 @@ async function processData() {
     }
 }
 </script>
+<script>
+// Function to get URL parameters
+function getQueryParameter(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
+
+// On page load, populate the match ID if available
+window.onload = function() {
+    const matchId = getQueryParameter('matchId');
+    if (matchId) {
+        document.getElementById('json-input').value = matchId; // Set the matchId in the textbox
+    }
+};
+</script>
 
 </body>
 </html>
