@@ -18,15 +18,15 @@
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
-            word-wrap: break-word;
-            font-size: 14px;
+            word-wrap: break-word; /* Prevent overflow of long text */
+            font-size: 14px; /* Set a base font size */
         }
         th {
             background-color: #f2f2f2;
         }
         img {
-            width: 35px;
-            height: 35px;
+            width: 35px; /* Reduced logo size */
+            height: 35px; /* Reduced logo size */
             vertical-align: middle;
             margin-right: 8px;
         }
@@ -35,32 +35,24 @@
         }
         @media (max-width: 600px) {
             th, td {
-                font-size: 12px;
+                font-size: 12px; /* Smaller font size for mobile */
             }
             img {
-                width: 30px;
-                height: 30px;
+                width: 30px; /* Further reduced logo size for mobile */
+                height: 30px; /* Further reduced logo size for mobile */
             }
             .hide-mobile {
-                display: none;
+                display: none; /* Hide the status column on mobile */
             }
-        }
-        #stats-container {
-            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <h1>Basketball Fixtures - Team 2</h1>
+    <a href="t1.html">Click here to see Team 1</a>
+
     <div id="scores-container">
         <!-- Scores tables will be populated here -->
-    </div>
-
-    <div id="stats-container">
-        <h2>Game Stats Report</h2>
-        <textarea id="stats-input" rows="10" style="width:100%;"></textarea>
-        <button id="generate-report">Generate Report</button>
-        <div id="report-output"></div>
     </div>
 
     <script>
@@ -73,13 +65,13 @@
                             <thead>
                                 <tr>
                                     <th>Date & Time</th>
-                                    <th>Home</th>
+                                    <th>Home</th> <!-- Changed from Team 1 to Home -->
                                     <th>Score</th>
                                     <th>Score</th>
-                                    <th>Away</th>
-                                    <th class="hide-mobile">Status</th>
+                                    <th>Away</th> <!-- Changed from Team 2 to Away -->
+                                    <th class="hide-mobile">Status</th> <!-- Hide this column on mobile -->
                                     <th>Venue</th>
-                                    <th>Action</th> <!-- New Action Column -->
+                                    <th>Details</th> <!-- New column for match details -->
                                 </tr>
                             </thead>
                             <tbody>`;
@@ -102,6 +94,7 @@
                             });
                             const matchStatus = match.matchStatus || 'UPCOMING';
                             const venueName = match.venueCourt.venue.name;
+                            const courtNumber = match.venueCourt.courtNumber;
                             const lat = match.venueCourt.lat;
                             const lng = match.venueCourt.lng;
 
@@ -120,11 +113,12 @@
                             const row = `<tr>
                                 <td>${startTime}</td>
                                 <td class="${team1Class}"><img src="${team1Logo}" alt="${team1Name} logo">${team1Display}</td>
-                                <td>${score1Display}</td>
-                                <td>${score2Display}</td>
+                                <td>${score1Display}</td> <!-- No highlight applied to score -->
+                                <td>${score2Display}</td> <!-- No highlight applied to score -->
                                 <td class="${team2Class}"><img src="${team2Logo}" alt="${team2Name} logo">${team2Display}</td>
-                                <td class="hide-mobile">${matchStatus}</td>
-                                <td><a href="match-details.html?matchId=${match.id}" class="view-details">View Details</a></td> <!-- Button to view details -->
+                                <td class="hide-mobile">${matchStatus}</td> <!-- Hide this cell on mobile -->
+                                <td><a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank">${venueName} - Court ${courtNumber}</a></td>
+                                <td><a href="match-details.html?matchId=${match.id}">View Details</a></td> <!-- Link to match details -->
                             </tr>`;
                             
                             roundTable += row;
@@ -133,52 +127,9 @@
                         roundTable += `</tbody></table>`;
                         document.querySelector('#scores-container').innerHTML += roundTable;
                     });
-
-                    // Add event listeners for "View Details" buttons
-                    document.querySelectorAll('.view-details').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const matchId = this.getAttribute('data-matchid');
-                            fetch(`https://api-basketball.squadi.com/livescores/matches/public/events?matchId=${matchId}`)
-                                .then(response => response.json())
-                                .then(data => {
-                                    // Assuming data is in the expected format
-                                    document.getElementById('stats-input').value = JSON.stringify(data);
-                                    generateReport(); // Automatically generate report after fetching data
-                                })
-                                .catch(error => {
-                                    console.error('Error fetching match details:', error);
-                                    alert('Error loading match details.');
-                                });
-                        });
-                    });
                 })
                 .catch(error => console.error('Error fetching data:', error));
         });
-
-        function generateReport() {
-            const inputData = document.getElementById('stats-input').value;
-            const reportOutput = document.getElementById('report-output');
-
-            try {
-                const data = JSON.parse(inputData);
-                // Process the data as needed, create your report
-                let html = '<table><thead><tr><th>Event</th><th>Player Shirt</th><th>Team ID</th></tr></thead><tbody>';
-                
-                data.forEach(event => {
-                    const { displayName, players, teamId } = event;
-                    const playerShirt = players.length > 0 ? players[0].shirt : 'N/A';
-                    html += `<tr><td>${displayName}</td><td>${playerShirt}</td><td>${teamId}</td></tr>`;
-                });
-
-                html += '</tbody></table>';
-                reportOutput.innerHTML = html;
-            } catch (error) {
-                reportOutput.innerHTML = '<p>Error parsing JSON data.</p>';
-                console.error('Error parsing data:', error);
-            }
-        }
-
-        document.getElementById('generate-report').addEventListener('click', generateReport);
     </script>
 </body>
 </html>
