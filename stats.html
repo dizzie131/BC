@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Stats Report</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -39,11 +38,8 @@
         #matchid-container {
             margin-bottom: 20px;
         }
-        canvas {
-            max-width: 600px; /* Adjust as needed */
-            margin: auto;
-        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -59,20 +55,18 @@
 <button onclick="processData()">Process Data</button>
 
 <h2>Game Stats Report</h2>
-<canvas id="scoreChart"></canvas>
 <div id="output-container"></div>
+<canvas id="scoreChart" width="400" height="200"></canvas>
 
 <script>
 let teamLogos = {}; // Object to store team logos
-let team1Score = 0;
-let team2Score = 0;
+let team1Id, team2Id;
 let labels = [];
 let team1Scores = [];
 let team2Scores = [];
-let team1Id;
-let team2Id;
+let team1Score = 0;
+let team2Score = 0;
 
-// Function to fetch team logos
 async function fetchTeamLogos() {
     const url = 'https://api-basketball.squadi.com/livescores/teams/ladder/v2?divisionIds=9665&competitionKey=57857f42-2493-49ad-9396-5471910edeb3&filteredOutCompStatuses=1&showForm=1&sportRefId=2';
     
@@ -83,7 +77,13 @@ async function fetchTeamLogos() {
         }
         const data = await response.json();
 
-        // Populate teamLogos object with team ID and logo URL
+        // Log the fetched data for debugging
+        console.log('Fetched team data:', data);
+
+        if (!data || !data.ladders || !Array.isArray(data.ladders)) {
+            throw new Error('Unexpected data format for teams');
+        }
+
         data.ladders.forEach(ladder => {
             teamLogos[ladder.id] = ladder.logoUrl; // Use ladder.id for team ID
         });
@@ -92,7 +92,6 @@ async function fetchTeamLogos() {
     }
 }
 
-// Fetch match data function
 async function fetchMatchData() {
     const matchId = document.getElementById('matchid-input').value;
     const url = `https://api-basketball.squadi.com/livescores/matches/public/events?matchId=${matchId}`;
@@ -103,16 +102,14 @@ async function fetchMatchData() {
             throw new Error('Network response was not ok');
         }
         const data = await response.json();
-
+        
         // Place the fetched JSON into the textarea
         document.getElementById('json-input').value = JSON.stringify(data, null, 2);
-        return data; // Return fetched data
     } catch (error) {
         alert('Error fetching match data: ' + error.message);
     }
 }
 
-// Process data function
 async function processData() {
     await fetchTeamLogos();
 
@@ -123,29 +120,35 @@ async function processData() {
         const outputContainer = document.getElementById('output-container');
         outputContainer.innerHTML = ''; // Clear previous output
 
-        // Extract team IDs from the match data
-        if (data && data.length > 0) {
-            team1Id = data[0].team1Id; // Adjust based on actual JSON structure
-            team2Id = data[0].team2Id; // Adjust based on actual JSON structure
+        // Extract unique team IDs from the first event
+        const teams = new Set();
+        data.forEach(event => {
+            if (event.teamId) {
+                teams.add(event.teamId);
+            }
+        });
+
+        const teamIds = Array.from(teams);
+        if (teamIds.length >= 2) {
+            team1Id = teamIds[0]; // First team ID
+            team2Id = teamIds[1]; // Second team ID
+        } else {
+            alert('Not enough unique team IDs found in the data.');
+            return;
         }
 
-        // Initialize scores and labels
-        labels = [];
-        team1Scores = [];
-        team2Scores = [];
+        // Initialize scores
+        team1Score = 0;
+        team2Score = 0;
 
         // Sort events by timestamp (ascending)
         data.sort((a, b) => a.timestamp - b.timestamp);
 
-        // Initialize team scores
-        team1Score = 0;
-        team2Score = 0;
-
-        // Create tables for each quarter and collect score data
         data.forEach(event => {
             const eventTimestamp = new Date(event.timestamp * 1000).toLocaleTimeString(); // Convert to readable time
             labels.push(eventTimestamp); // Add timestamp to labels
 
+            // Update scores based on the event's team ID
             if (event.stat.displayName.includes("Score")) {
                 if (event.teamId === team1Id) {
                     team1Score += event.score;
@@ -166,42 +169,31 @@ async function processData() {
     }
 }
 
-// Function to create the score chart
 function createScoreChart() {
     const ctx = document.getElementById('scoreChart').getContext('2d');
-    const scoreChart = new Chart(ctx, {
+    const chart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [
                 {
-                    label: 'Team 1 Score', // Adjust team names accordingly
+                    label: `Team 1 (ID: ${team1Id})`,
                     data: team1Scores,
-                    borderColor: 'blue',
-                    fill: false,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    fill: false
                 },
                 {
-                    label: 'Team 2 Score',
+                    label: `Team 2 (ID: ${team2Id})`,
                     data: team2Scores,
-                    borderColor: 'red',
-                    fill: false,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    fill: false
                 }
             ]
         },
         options: {
-            responsive: true,
             scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Time'
-                    }
-                },
                 y: {
-                    title: {
-                        display: true,
-                        text: 'Score'
-                    }
+                    beginAtZero: true
                 }
             }
         }
@@ -219,10 +211,11 @@ window.onload = async function() {
     const matchId = getQueryParameter('matchId');
     if (matchId) {
         document.getElementById('matchid-input').value = matchId; // Set the matchId in the textbox
-        const data = await fetchMatchData(); // Automatically fetch match data
+        await fetchMatchData(); // Automatically fetch match data
         await processData(); // Automatically process data
     }
 };
 </script>
+
 </body>
 </html>
