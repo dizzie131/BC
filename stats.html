@@ -145,19 +145,24 @@ async function processData() {
         const outputContainer = document.getElementById('output-container');
         outputContainer.innerHTML = ''; // Clear previous output
 
-        const groupedData = {};
+        // Extract team IDs and names from the data
+        team1Id = data[0].teamId; // Assuming the first event has team 1's ID
+        team2Id = data[1].teamId; // Assuming the second event has team 2's ID
+        team1Name = data[0].teamName; // Assuming the first event has team 1's name
+        team2Name = data[1].teamName; // Assuming the second event has team 2's name
 
-        // Sort events by timestamp (ascending)
-        data.sort((a, b) => a.timestamp - b.timestamp);
+        // Update team scores (you may need to calculate these based on the events)
+        team1Score = data.filter(event => event.teamId === team1Id).length; // Example: Count events for team 1
+        team2Score = data.filter(event => event.teamId === team2Id).length; // Example: Count events for team 2
 
-        // Group data by quarters (period id)
-        data.forEach(event => {
-            const periodId = event.period.id;
-            if (!groupedData[periodId]) {
-                groupedData[periodId] = [];
-            }
-            groupedData[periodId].push(event);
-        });
+        updateScoreboard(); // Call to update the scoreboard display
+
+        // Continue with the rest of your data processing...
+    } catch (error) {
+        alert('Invalid JSON data. Please check the format and try again.');
+    }
+}
+);
 
         // Create tables for each quarter
         for (const quarter in groupedData) {
