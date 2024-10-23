@@ -7,34 +7,69 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 10px;
+            padding: 20px;
         }
-        /* Add any additional styles you need */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
     </style>
 </head>
 <body>
     <h1>Match Details</h1>
-    <div id="match-details"></div>
+    <div id="match-details-container">
+        <!-- Match details will be populated here -->
+    </div>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const matchId = params.get('matchId');
+        // Function to get URL parameters
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
 
+        const matchId = getQueryParam('matchId');
         if (matchId) {
             fetch(`https://api-basketball.squadi.com/livescores/matches/public/events?matchId=${matchId}`)
                 .then(response => response.json())
                 .then(data => {
-                    // Process and format the data here
-                    let detailsHtml = '';
-                    data.forEach(event => {
-                        // Format each event as needed
-                        detailsHtml += `<p>${event.displayName} (Team ${event.teamId}) - ${event.timestamp}</p>`;
-                    });
-                    document.getElementById('match-details').innerHTML = detailsHtml;
+                    const container = document.getElementById('match-details-container');
+                    if (data && data.length > 0) {
+                        let html = '<table><thead><tr><th>Event</th><th>Player</th><th>Time</th><th>Team ID</th></tr></thead><tbody>';
+                        data.forEach(event => {
+                            const playerName = event.player ? event.player.name : 'N/A'; // Get player name if available
+                            const displayName = event.displayName || 'N/A'; // Get event display name
+                            const timestamp = new Date(event.timestamp).toLocaleTimeString('en-AU'); // Format timestamp
+                            const teamId = event.teamId || 'N/A'; // Get team ID
+
+                            html += `<tr>
+                                <td>${displayName}</td>
+                                <td>${playerName}</td>
+                                <td>${timestamp}</td>
+                                <td>${teamId}</td>
+                            </tr>`;
+                        });
+                        html += '</tbody></table>';
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = '<p>No match data available.</p>';
+                    }
                 })
-                .catch(error => console.error('Error fetching match details:', error));
+                .catch(error => {
+                    console.error('Error fetching match details:', error);
+                    document.getElementById('match-details-container').innerHTML = '<p>Error loading match details.</p>';
+                });
         } else {
-            document.getElementById('match-details').innerHTML = '<p>No match ID provided.</p>';
+            document.getElementById('match-details-container').innerHTML = '<p>No match ID provided.</p>';
         }
     </script>
 </body>
