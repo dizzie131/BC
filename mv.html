@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morphett Vale Game Schedule</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .court-container {
+            margin-bottom: 20px;
+        }
+        .game {
+            padding: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Games at Morphett Vale</h1>
+
+<div id="court-1" class="court-container">
+    <h2>Court 1:</h2>
+</div>
+<div id="court-2" class="court-container">
+    <h2>Court 2:</h2>
+</div>
+<div id="court-3" class="court-container">
+    <h2>Court 3:</h2>
+</div>
+<div id="court-4" class="court-container">
+    <h2>Court 4:</h2>
+</div>
+
+<script>
+    async function loadGamesAtMorphettVale() {
+        const apiUrl = 'https://api-basketball.squadi.com/livescores/round/matches?divisionId=10793&ignoreStatuses=[1]';
+        
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            
+            // Filter and display games at Morphett Vale
+            data.rounds.forEach(round => {
+                round.matches.forEach(match => {
+                    const courtNumber = match.venueCourt.courtNumber;
+                    const venueName = match.venueCourt.name;
+                    
+                    // Ensure we are only listing games at Morphett Vale
+                    if (venueName.includes("Morphett Vale")) {
+                        const startTime = new Date(match.startTime).toLocaleTimeString('en-AU', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                        });
+                        const homeTeam = match.team1.name;
+                        const awayTeam = match.team2.name;
+
+                        // Find the appropriate court container
+                        const courtContainer = document.getElementById(`court-${courtNumber}`);
+                        if (courtContainer) {
+                            const gameElement = document.createElement('div');
+                            gameElement.classList.add('game');
+                            gameElement.textContent = `${startTime} - ${homeTeam} vs. ${awayTeam}`;
+                            courtContainer.appendChild(gameElement);
+                        }
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('Error fetching game data:', error);
+        }
+    }
+
+    // Fetch and display games on page load
+    loadGamesAtMorphettVale();
+</script>
+
+</body>
+</html>
