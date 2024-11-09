@@ -24,6 +24,12 @@
 
 <h1>Games at Morphett Vale</h1>
 
+<!-- Date selector -->
+<div style="text-align: center; margin-bottom: 20px;">
+    <label for="date-selector">Select Date:</label>
+    <input type="date" id="date-selector" name="date-selector" />
+</div>
+
 <div id="court-1" class="court-container">
     <h2>Court 1:</h2>
 </div>
@@ -38,38 +44,59 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    // Fetch and display games based on the selected date
+    function fetchAndDisplayGames(selectedDate) {
+        document.querySelectorAll('.court-container').forEach(container => container.innerHTML = `<h2>${container.id.replace('-', ' ')}:</h2>`); // Clear previous games
+
         fetch('https://api-basketball.squadi.com/livescores/round/matches?divisionId=10793&ignoreStatuses=[1]')
             .then(response => response.json())
             .then(data => {
                 data.rounds.forEach(round => {
                     round.matches.forEach(match => {
-                        const courtNumber = match.venueCourt.courtNumber;
-                        const venueName = match.venueCourt.venue.name;
+                        const matchDate = match.startTime.split('T')[0];
+                        if (matchDate === selectedDate) {  // Filter by selected date
+                            const courtNumber = match.venueCourt.courtNumber;
+                            const venueName = match.venueCourt.venue.name;
 
-                        // Only display games scheduled at Morphett Vale
-                        if (venueName.includes("Morphett Vale")) {
-                            const startTime = new Date(match.startTime).toLocaleTimeString('en-AU', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true
-                            });
-                            const homeTeam = match.team1.name;
-                            const awayTeam = match.team2.name;
+                            // Only display games scheduled at Morphett Vale
+                            if (venueName.includes("Morphett Vale")) {
+                                const startTime = new Date(match.startTime).toLocaleTimeString('en-AU', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true
+                                });
+                                const homeTeam = match.team1.name;
+                                const awayTeam = match.team2.name;
 
-                            // Select the correct court container
-                            const courtContainer = document.getElementById(`court-${courtNumber}`);
-                            if (courtContainer) {
-                                const gameElement = document.createElement('div');
-                                gameElement.classList.add('game');
-                                gameElement.textContent = `${startTime} - ${homeTeam} vs. ${awayTeam}`;
-                                courtContainer.appendChild(gameElement);
+                                // Select the correct court container
+                                const courtContainer = document.getElementById(`court-${courtNumber}`);
+                                if (courtContainer) {
+                                    const gameElement = document.createElement('div');
+                                    gameElement.classList.add('game');
+                                    gameElement.textContent = `${startTime} - ${homeTeam} vs. ${awayTeam}`;
+                                    courtContainer.appendChild(gameElement);
+                                }
                             }
                         }
                     });
                 });
             })
             .catch(error => console.error('Error fetching data:', error));
+    }
+
+    // Date selector event listener
+    document.getElementById('date-selector').addEventListener('change', (event) => {
+        const selectedDate = event.target.value;
+        if (selectedDate) {
+            fetchAndDisplayGames(selectedDate);
+        }
+    });
+
+    // Automatically fetch data for the current date on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date-selector').value = today;
+        fetchAndDisplayGames(today);
     });
 </script>
 
