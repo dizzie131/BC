@@ -51,7 +51,19 @@
         fetch('https://api-basketball.squadi.com/livescores/round/matches?divisionId=10793&ignoreStatuses=[1]')
             .then(response => response.json())
             .then(data => {
+                if (!data.rounds || data.rounds.length === 0) {
+                    console.error('No rounds data available');
+                    return;
+                }
+
+                let foundMatches = false; // Track if any matches were found
+
                 data.rounds.forEach(round => {
+                    if (!round.matches) {
+                        console.warn(`No matches in round ${round.id}`);
+                        return;
+                    }
+
                     round.matches.forEach(match => {
                         const matchDate = match.startTime.split('T')[0];
                         if (matchDate === selectedDate) {  // Filter by selected date
@@ -60,6 +72,7 @@
 
                             // Only display games scheduled at Morphett Vale
                             if (venueName.includes("Morphett Vale")) {
+                                foundMatches = true;
                                 const startTime = new Date(match.startTime).toLocaleTimeString('en-AU', {
                                     hour: '2-digit',
                                     minute: '2-digit',
@@ -75,11 +88,17 @@
                                     gameElement.classList.add('game');
                                     gameElement.textContent = `${startTime} - ${homeTeam} vs. ${awayTeam}`;
                                     courtContainer.appendChild(gameElement);
+                                } else {
+                                    console.warn(`Court ${courtNumber} not found in DOM.`);
                                 }
                             }
                         }
                     });
                 });
+
+                if (!foundMatches) {
+                    console.log(`No matches found for ${selectedDate} at Morphett Vale`);
+                }
             })
             .catch(error => console.error('Error fetching data:', error));
     }
